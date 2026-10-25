@@ -6,36 +6,44 @@ on:
 
 jobs:
   build:
+    name: Build Android APK
     runs-on: ubuntu-24.04
 
+    permissions:
+      contents: read
+
     steps:
-      - name: Checkout project
+      - name: Checkout Project
         uses: actions/checkout@v4
 
-      - name: Setup Java
+      - name: Setup Java 17
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '17'
 
-      - name: Check Android SDK
-        run: |
-          echo "SDK location: $ANDROID_HOME"
-          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --version
-
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
 
-      - name: Build APK
-        working-directory: JA1_Church_Presenter_Android
+      - name: Verify Android SDK
         run: |
-          gradle wrapper --gradle-version 8.9
-          chmod +x gradlew
-          ./gradlew :app:assembleDebug --no-daemon
+          echo "Android SDK: $ANDROID_HOME"
+          echo "Project files:"
+          ls -la
+          test -f settings.gradle
+          test -f build.gradle
+          test -f app/build.gradle
+
+      - name: Build Debug APK
+        run: |
+          gradle :app:assembleDebug --no-daemon --stacktrace
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: JA1-Church-Presenter-APK
-          path: JA1_Church_Presenter_Android/app/build/outputs/apk/debug/*.apk
+          path: app/build/outputs/apk/debug/*.apk
           if-no-files-found: error
+          retention-days: 30
