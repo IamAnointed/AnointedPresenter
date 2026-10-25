@@ -1,0 +1,17 @@
+
+workflows:
+  android-debug:
+    name: JA1 Church Presenter APK
+    max_build_duration: 60
+    instance_type: linux_x2
+    environment:
+      java: 17
+    scripts:
+      - name: Build Android APK
+        script: |
+          cd JA1_Church_Presenter_Android
+          gradle wrapper --gradle-version 8.9
+          chmod +x gradlew
+          ./gradlew :app:assembleDebug --no-daemon
+    artifacts:
+      - JA1_Church_Presenter_Android/app/build/outputs/apk/debug/*.apk
