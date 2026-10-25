@@ -6,7 +6,7 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     steps:
       - name: Checkout project
@@ -18,18 +18,24 @@ jobs:
           distribution: temurin
           java-version: '17'
 
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
+      - name: Check Android SDK
+        run: |
+          echo "SDK location: $ANDROID_HOME"
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --version
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
 
       - name: Build APK
         working-directory: JA1_Church_Presenter_Android
         run: |
           gradle wrapper --gradle-version 8.9
           chmod +x gradlew
-          ./gradlew assembleDebug --no-daemon
+          ./gradlew :app:assembleDebug --no-daemon
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: JA1-Church-Presenter-APK
           path: JA1_Church_Presenter_Android/app/build/outputs/apk/debug/*.apk
+          if-no-files-found: error
