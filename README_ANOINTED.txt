@@ -7,3 +7,5 @@ Online API.Bible is NOT integrated: do not embed your private API key in public 
 IMPORTANT: Unverified Android build; backup/export your library and test before worship service.
 
 Online API.Bible: in-app personal API key entry under Online Bible. Key is saved in private SharedPreferences, not encrypted; it is not embedded in the public source/APK. Android sends HTTPS requests directly to API.Bible. Licensed translations depend on your account. Never share a device backup containing the key. Unverified build.
+
+Merged uploaded Media Library HTML: IndexedDB stored motion videos, categories Praise/Worship/Prayer/Sermon/Other, assign per song, preview/override, remove. Tablet/browser preview supported. Native projector cannot directly read IndexedDB blob URLs: for projector use native section video picker. Build not verified.
