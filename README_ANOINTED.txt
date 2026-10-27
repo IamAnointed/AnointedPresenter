@@ -11,3 +11,5 @@ Online API.Bible: in-app personal API key entry under Online Bible. Key is saved
 Merged uploaded Media Library HTML: IndexedDB stored motion videos, categories Praise/Worship/Prayer/Sermon/Other, assign per song, preview/override, remove. Tablet/browser preview supported. Native projector cannot directly read IndexedDB blob URLs: for projector use native section video picker. Build not verified.
 
 2026-10-27: Removed non-working IndexedDB Media Library UI. Section Background supports remove selected, apply to all slides of current song, remove from all slides, apply to choruses. Native videoKey shared by slide assignments for same video. Build not tested.
+
+Projector font fix: native Android Presentation now maps browser font selections to supported Android typeface families and applies Regular/Bold/Extra Bold weights. Exact Arial/Georgia/Impact glyphs may differ from browser because native fonts are substitutes. APK build and device test pending.
