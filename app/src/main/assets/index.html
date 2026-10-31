@@ -4,8 +4,8 @@
 .toolstrip{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}.toolstrip button{flex:1;min-width:105px}.status{background:#0d1421;padding:9px;border-radius:8px;color:#aebfdb}.panel{margin:12px 0;padding:12px;border:1px solid #344157;border-radius:10px}.panel h2{margin-top:0}.next-preview{white-space:pre-line;background:#0c1422;padding:14px;border-radius:9px;min-height:85px;color:#dce8fa}.stage .stageText{transition:opacity .3s ease}.stage .stageText.fading{opacity:0}.stageShade{position:absolute;inset:0;pointer-events:none;z-index:1}.stageText{z-index:2}.stage.blank .stageText{visibility:hidden}.stage.black{background:#000!important;background-image:none!important}.stage.black video,.stage.black .stageShade,.stage.black .stageText{visibility:hidden}.compact{font-size:12px}.playlist-entry{display:flex;gap:4px;align-items:center}.playlist-entry button:first-child{flex:1}.playlist-entry button:not(:first-child){flex:0 0 35px;padding:8px 4px}
 
 #playlistSongs button{width:100%;text-align:left;margin:4px 0}#playlistSongs .active{border-color:#74a0ff;background:#3459a1}#songSearch{margin-bottom:9px}hr{border:0;border-top:1px solid #354156;margin:16px 0}#playlistSelect{margin-bottom:8px}.mediaCard{border:1px solid #38465e;border-radius:9px;padding:9px;margin:7px 0;background:#101827}.mediaCard.active{border-color:#6791ff;background:#223b65}.mediaCard button{padding:6px 9px;margin:3px}.mediaCard .muted{overflow-wrap:anywhere}.pill{font-size:11px;border-radius:8px;background:#26395b;padding:3px 7px}.mediaStatus{font-size:12px;color:#9fb7e8;line-height:1.5}#mediaList{max-height:300px;overflow:auto}#mediaPreview{width:100%;max-height:130px;object-fit:contain;background:#000;border-radius:8px} </style></head><body><header><h1>✦ Anointed Presenter</h1><div class="row"><button onclick="save()">Save</button><button class="primary" onclick="present()">▶ Open Lyrics Output</button></div></header><main>
-<section><h2>Song Library</h2><label class="upload">＋ Upload XML / TXT<input id="files" type="file" accept=".xml,.txt" multiple hidden onchange="uploadFiles(this.files)"></label><button onclick="newSong()">＋ New Song</button><label>Search songs<input id="songSearch" type="search" placeholder="Search song title or lyrics..." oninput="renderSongs()"></label><div id="songs"></div><hr><h2>Worship Setlist Manager</h2><div class="row"><input id="playlistName" placeholder="Playlist name (e.g. Sunday Worship)"><button onclick="createPlaylist()">+ Save</button></div><label>Choose playlist<select id="playlistSelect" onchange="selectPlaylist(this.value)"></select></label><div class="row"><button onclick="addToPlaylist()">+ Add current song</button><button onclick="removeFromPlaylist()">Remove song</button></div><div id="playlistSongs"></div><div class="row"><button onclick="setlistStep(-1)">← Previous Song</button><button onclick="setlistStep(1)">Next Song →</button></div><div class="row"><button onclick="renamePlaylist()">Rename</button><button onclick="deletePlaylist()">Delete playlist</button></div><hr><p class="small muted">Stored locally in this browser. Use Export Library for backups.</p><button onclick="exportLibrary()">Export Library</button><label class="upload">Import Library JSON<input type="file" accept=".json" hidden onchange="importLibrary(this.files[0])"></label></section>
-<section><div class="row"><div><h2>Tablet Control / Live Preview</h2><span id="current" class="muted"></span></div><button onclick="prev()">← Previous</button><button onclick="next()">Next →</button></div><div class="stage" id="preview"><div class="stageShade"></div><video class="stageVideo" autoplay muted loop playsinline></video><div class="stageText"></div></div><div class="toolstrip"><button onclick="toggleClear()" id="clearBtn">Clear Lyrics</button><button onclick="toggleBlack()" id="blackBtn">Blackout</button><button onclick="goLive()" class="primary">Go Live</button></div><label>Transition speed <select id="fadeSpeed" onchange="settings.fadeMs=Number(this.value);persist();draw()"><option value="0">Instant</option><option value="200">Fast · 0.2s</option><option value="400" selected>Smooth · 0.4s</option><option value="700">Slow · 0.7s</option></select></label><h2>Next Slide Preview</h2><div class="next-preview" id="nextPreview"></div><h2>Song Sections</h2><div id="verses"></div><h2>Edit selected section</h2><label>Section label<input id="vname" oninput="editVerse()"></label><label>Lyrics<textarea id="lyrics" oninput="editVerse()"></textarea></label><div class="row"><button onclick="addVerse()">＋ Add Section</button><button onclick="deleteVerse()">Delete Section</button></div></section>
+<section><h2>Song Library</h2><div class="panel"><h2>📽 Static Slide Presenter</h2><p class="small muted">Import a PDF exported from PowerPoint. Original slide layout is preserved. Tablet shows controls; projector shows slides only. PDF is saved privately in the app.</p><button onclick="importSlideDeck()">＋ Import PowerPoint as PDF</button><button onclick="activateSlides()">Show Slides</button><button onclick="activateSongs()">Show Songs</button><div id="slideDeckStatus" class="small muted">No slide deck imported</div><div class="row"><button onclick="slideStep(-1)">← Slide</button><button onclick="slideStep(1)">Slide →</button></div><div class="row"><button onclick="slideBlackout()">Blackout</button><button onclick="removeSlideDeck()">Remove Deck</button></div></div><label class="upload">＋ Upload XML / TXT<input id="files" type="file" accept=".xml,.txt" multiple hidden onchange="uploadFiles(this.files)"></label><button onclick="newSong()">＋ New Song</button><label>Search songs<input id="songSearch" type="search" placeholder="Search song title or lyrics..." oninput="renderSongs()"></label><div id="songs"></div><hr><h2>Worship Setlist Manager</h2><div class="row"><input id="playlistName" placeholder="Playlist name (e.g. Sunday Worship)"><button onclick="createPlaylist()">+ Save</button></div><label>Choose playlist<select id="playlistSelect" onchange="selectPlaylist(this.value)"></select></label><div class="row"><button onclick="addToPlaylist()">+ Add current song</button><button onclick="removeFromPlaylist()">Remove song</button></div><div id="playlistSongs"></div><div class="row"><button onclick="setlistStep(-1)">← Previous Song</button><button onclick="setlistStep(1)">Next Song →</button></div><div class="row"><button onclick="renamePlaylist()">Rename</button><button onclick="deletePlaylist()">Delete playlist</button></div><hr><p class="small muted">Saved in Android app storage. Export Library for an additional backup.</p><button onclick="exportLibrary()">Export Library</button><label class="upload">Import Library JSON<input type="file" accept=".json" hidden onchange="importLibrary(this.files[0])"></label></section>
+<section><div class="row"><div><h2>Tablet Control / Live Preview</h2><span id="current" class="muted"></span></div><button onclick="prev()">← Previous</button><button onclick="next()">Next →</button></div><div class="stage" id="preview"><img id="slidePreview" style="display:none;position:absolute;inset:0;width:100%;height:100%;object-fit:contain;z-index:5;background:black"><div class="stageShade"></div><video class="stageVideo" autoplay muted loop playsinline></video><div class="stageText"></div></div><div class="toolstrip"><button onclick="toggleClear()" id="clearBtn">Clear Lyrics</button><button onclick="toggleBlack()" id="blackBtn">Blackout</button><button onclick="goLive()" class="primary">Go Live</button></div><label>Transition speed <select id="fadeSpeed" onchange="settings.fadeMs=Number(this.value);persist();draw()"><option value="0">Instant</option><option value="200">Fast · 0.2s</option><option value="400" selected>Smooth · 0.4s</option><option value="700">Slow · 0.7s</option></select></label><h2>Next Slide Preview</h2><div class="next-preview" id="nextPreview"></div><h2>Next PowerPoint Slide</h2><img id="nextSlideImage" style="display:none;width:100%;aspect-ratio:16/9;object-fit:contain;background:black;border-radius:8px"><h2>Song Sections</h2><div id="verses"></div><h2>Edit selected section</h2><label>Section label<input id="vname" oninput="editVerse()"></label><label>Lyrics<textarea id="lyrics" oninput="editVerse()"></textarea></label><div class="row"><button onclick="addVerse()">＋ Add Section</button><button onclick="deleteVerse()">Delete Section</button></div></section>
 <section><h2>Appearance</h2><label>Song title<input id="songtitle" oninput="renameSong()"></label><label>Font family<select id="font" onchange="styleChanged()"><option>Arial</option><option>Georgia</option><option>Verdana</option><option>Tahoma</option><option>Trebuchet MS</option><option>Impact</option><option>Times New Roman</option></select></label><label>Font size <span id="sizeVal"></span><input id="size" type="range" min="20" max="100" value="52" oninput="styleChanged()"></label><label>Font weight<select id="weight" onchange="styleChanged()"><option value="700">Bold</option><option value="400">Regular</option><option value="900">Extra Bold</option></select></label><label>Alignment<select id="align" onchange="styleChanged()"><option value="center">Center</option><option value="left">Left</option><option value="right">Right</option></select></label><label>Text color<input id="color" type="color" value="#ffffff" oninput="styleChanged()"></label><label>Background color<input id="bg" type="color" value="#000000" oninput="styleChanged()"></label><label>Background image<input type="file" accept="image/*" onchange="backgroundImage(this.files[0])"></label><button onclick="clearBackground()">Remove image</button><hr><h2>Background Library</h2><div class="panel"><label>Save current image as preset<input id="bgPresetName" placeholder="e.g. Sunday Blue"></label><button onclick="saveBackgroundPreset()">Save Image Preset</button><div id="backgroundPresets"></div><p class="small muted">Image presets use tablet storage. Video files remain local to the tablet.</p></div><h2>Looping Video Background</h2><label>Choose MP4 / WebM video<input id="videoFile" type="file" accept="video/mp4,video/webm,video/*" onchange="backgroundVideo(this.files[0])"></label><label>Video fit<select id="videoFit" onchange="videoOptionsChanged()"><option value="cover">Fill screen (crop)</option><option value="contain">Fit entire video</option></select></label><label>Video dimming <span id="dimVal">35%</span><input id="videoDim" type="range" min="0" max="80" value="35" oninput="videoOptionsChanged()"></label><button onclick="clearVideo()">Remove video</button><p class="small muted" id="videoStatus">No video selected. Video loops automatically and plays muted. Re-select the video after restarting the app.</p><div class="panel"><h2>Online Bible · API.Bible</h2>
 <p class="small muted">Personal-use key. Saved in private Android app preferences (not encrypted). Do not share the APK or enter the key on an untrusted device.</p>
 <label>API Key<input type="password" id="apiBibleKey" autocomplete="off" placeholder="Paste your API.Bible key"></label>
@@ -89,16 +89,69 @@ let si=0,vi=0;
 let mode='song',specialText='',clearLyrics=false,blackout=false,countTimer=null,countEnd=0;
 let bgPresets=[];try{bgPresets=JSON.parse(localStorage.getItem('ja1_bg_presets'))||[]}catch(e){}
 let lastText='',lastMode='song';
+// Restore the last successfully saved state from Android private app storage.
+// Existing localStorage remains a migration fallback for users upgrading from older APKs.
+let nativeSaveReady=false;
+function restorePresenterState(){
+ if(!window.JA1Android?.loadPresenterState)return;
+ try{
+  const raw=window.JA1Android.loadPresenterState();
+  if(raw){
+   const data=JSON.parse(raw);
+   if(Array.isArray(data.library)&&data.library.length){
+    library=data.library;
+    settings=data.settings||{};
+    playlists=Array.isArray(data.playlists)?data.playlists:[];
+    bgPresets=Array.isArray(data.bgPresets)?data.bgPresets:[];
+    selectedPlaylist=playlists[0]?.id||null;
+   }
+  }
+ }catch(e){console.error('State restore failed',e);alert('Saved library could not be restored. Check your exported backup.')}
+}
+// Initialized after playlists are declared.
+
+let saveWarningShown=false;
+function saveNativeState(){
+ if(!nativeSaveReady||!window.JA1Android?.savePresenterState)return true;
+ try{
+  const state=JSON.stringify({library,settings,playlists,bgPresets});
+  if(window.JA1Android.savePresenterState(state))return true;
+ }catch(e){console.error('Android save failed',e)}
+ if(!saveWarningShown){saveWarningShown=true;alert('Warning: Unable to save changes to Android storage. Export Library now to avoid losing your songs.')}
+ return false;
+}
+
+let slidesActive=false,slideCount=0,slideIndex=0,slideIsBlack=false,slideGeneration=0;
+function importSlideDeck(){if(!window.JA1Android?.importSlideDeck)return alert('Slide import requires the Android APK. Export PPTX as PDF first.');window.JA1Android.importSlideDeck()}
+function slideDeckReady(count){slideCount=Number(count)||0;slideIndex=0;slideIsBlack=false;slidesActive=slideCount>0;renderSlidePresenter()}
+function activateSlides(){if(!slideCount)return alert('Import a PowerPoint PDF first');slidesActive=true;renderSlidePresenter()}
+function activateSongs(){window.JA1Android?.showSongs();slidesActive=false;slideIsBlack=false;$('slidePreview').style.display='none';$('nextSlideImage').style.display='none';render()}
+function slideStep(delta){if(!slideCount)return;slideIndex=Math.max(0,Math.min(slideCount-1,slideIndex+delta));slideIsBlack=false;slidesActive=true;renderSlidePresenter()}
+function slideBlackout(){slideIsBlack=!slideIsBlack;renderSlidePresenter()}
+function removeSlideDeck(){if(!confirm('Remove imported presentation?'))return;window.JA1Android?.removeSlideDeck();slideCount=0;slidesActive=false;$('slideDeckStatus').textContent='No slide deck imported';activateSongs()}
+function renderSlidePresenter(){
+ $('slideDeckStatus').textContent=slideCount?('Slide '+(slideIndex+1)+' of '+slideCount+(slidesActive?' · LIVE':'')):'No slide deck imported';
+ $('slidePreview').style.display=slidesActive?'block':'none';$('nextSlideImage').style.display=slidesActive&&slideIndex+1<slideCount?'block':'none';
+ if(!slidesActive)return;
+ $('current').textContent='PowerPoint · Slide '+(slideIndex+1)+' / '+slideCount;
+ $('nextPreview').textContent=slideIndex+1<slideCount?'Next: Slide '+(slideIndex+2):'End of presentation';
+ const token=++slideGeneration;
+ if(slideIsBlack){$('slidePreview').src='';$('nextSlideImage').src='';window.JA1Android?.showSlide(slideIndex,true);return}
+ window.JA1Android?.showSlide(slideIndex,false);
+ // Images are generated by Android PdfRenderer, and read from the private content bridge.
+ $('slidePreview').src='https://appassets.androidplatform.net/slide/current?g='+token;
+ if(slideIndex+1<slideCount)$('nextSlideImage').src='https://appassets.androidplatform.net/slide/next?g='+token;
+}
 function activeText(){return mode==='song'?(section()?.text||''):specialText}
 function displayText(){return clearLyrics||blackout?'':activeText()}
 function applyTextFade(el,text){const t=el.querySelector('.stageText');let speed=settings.fadeMs??400;t.style.transitionDuration=speed+'ms';if(t.textContent===text)return;if(!speed){t.textContent=text;return}t.classList.add('fading');setTimeout(()=>{t.textContent=text;t.classList.remove('fading')},Math.max(30,speed/2))}
-function toggleClear(){clearLyrics=!clearLyrics;blackout=false;draw()}
-function toggleBlack(){blackout=!blackout;clearLyrics=false;draw()}
-function goLive(){mode='song';clearLyrics=false;blackout=false;draw()}
+function toggleClear(){if(slidesActive){slideBlackout();return}clearLyrics=!clearLyrics;blackout=false;draw()}
+function toggleBlack(){if(slidesActive){slideBlackout();return}blackout=!blackout;clearLyrics=false;draw()}
+function goLive(){window.JA1Android?.showSongs();slidesActive=false;renderSlidePresenter();mode='song';clearLyrics=false;blackout=false;draw()}
 function nextInfo(){let p=getPlaylist();if(p&&p.songs.includes(si)){let k=p.songs.indexOf(si);if(vi<song().verses.length-1)return song().verses[vi+1]?.text||'';if(k+1<p.songs.length)return library[p.songs[k+1]]?.verses?.[0]?.text||'';return 'End of setlist'}if(vi<song().verses.length-1)return song().verses[vi+1]?.text||'';return library[si+1]?.verses?.[0]?.text||'End of library'}
 function setlistStep(delta){let p=getPlaylist();if(!p||!p.songs.length)return alert('Add songs to a playlist first');let at=p.songs.indexOf(si);let next=Math.max(0,Math.min(p.songs.length-1,at+delta));si=p.songs[next];vi=0;goLive();render()}
-function saveBackgroundPreset(){if(!settings.image)return alert('Select an image background first');let name=$('bgPresetName').value.trim()||'Background '+(bgPresets.length+1);bgPresets.push({name,image:settings.image});try{localStorage.setItem('ja1_bg_presets',JSON.stringify(bgPresets))}catch(e){bgPresets.pop();return alert('Tablet storage is full. Try a smaller image.')}renderBackgroundPresets();$('bgPresetName').value=''}
-function renderBackgroundPresets(){let box=$('backgroundPresets');box.replaceChildren();bgPresets.forEach((b,i)=>{let line=document.createElement('div');line.className='row';let use=document.createElement('button');use.textContent=b.name;use.onclick=()=>{settings.image=b.image;persist();draw()};let del=document.createElement('button');del.textContent='✕';del.style.flex='0 0 38px';del.onclick=()=>{bgPresets.splice(i,1);localStorage.setItem('ja1_bg_presets',JSON.stringify(bgPresets));renderBackgroundPresets()};line.append(use,del);box.append(line)})}
+function saveBackgroundPreset(){if(!settings.image)return alert('Select an image background first');let name=$('bgPresetName').value.trim()||'Background '+(bgPresets.length+1);bgPresets.push({name,image:settings.image});saveNativeState();try{localStorage.setItem('ja1_bg_presets',JSON.stringify(bgPresets))}catch(e){bgPresets.pop();return alert('Tablet storage is full. Try a smaller image.')}renderBackgroundPresets();$('bgPresetName').value=''}
+function renderBackgroundPresets(){let box=$('backgroundPresets');box.replaceChildren();bgPresets.forEach((b,i)=>{let line=document.createElement('div');line.className='row';let use=document.createElement('button');use.textContent=b.name;use.onclick=()=>{settings.image=b.image;persist();draw()};let del=document.createElement('button');del.textContent='✕';del.style.flex='0 0 38px';del.onclick=()=>{bgPresets.splice(i,1);saveNativeState();localStorage.setItem('ja1_bg_presets',JSON.stringify(bgPresets));renderBackgroundPresets()};line.append(use,del);box.append(line)})}
 function showBible(){let ref=$('bibleRef').value.trim(),verse=$('bibleText').value.trim();if(!verse)return alert('Enter Bible verse text');mode='bible';specialText=verse+(ref?'\n\n'+ref:'');clearLyrics=false;blackout=false;draw()}
 function saveBibleToSong(){let ref=$('bibleRef').value.trim()||'Bible Verse',verse=$('bibleText').value.trim();if(!verse)return alert('Enter Bible verse text');library.push({title:ref,verses:[{name:'Bible',text:verse}]});si=library.length-1;vi=0;persist();render()}
 function showAnnouncement(){let title=$('announceTitle').value.trim(),body=$('announceText').value.trim();if(!title&&!body)return;mode='announcement';specialText=[title,body].filter(Boolean).join('\n\n');clearLyrics=false;blackout=false;draw()}
@@ -111,9 +164,11 @@ function remoteCommand(cmd){if(cmd==='next')next();else if(cmd==='prev')prev();e
 
 let playlists;try{playlists=JSON.parse(localStorage.getItem('ja1_playlists'))||[]}catch{playlists=[]}
 let selectedPlaylist=playlists[0]?.id||null;
+restorePresenterState();
+nativeSaveReady=true;
 const playlistId=()=>String(Date.now())+'-'+Math.random().toString(36).slice(2,8);
 function getPlaylist(){return playlists.find(p=>p.id===selectedPlaylist)}
-function savePlaylists(){try{localStorage.setItem('ja1_playlists',JSON.stringify(playlists))}catch(e){alert('Storage is full. Export your library.')}} 
+function savePlaylists(){saveNativeState();try{localStorage.setItem('ja1_playlists',JSON.stringify(playlists))}catch(e){console.warn('Browser playlist storage full',e)}} 
 function createPlaylist(){let name=$('playlistName').value.trim();if(!name)return alert('Enter a playlist name');let p={id:playlistId(),name,songs:[]};playlists.push(p);selectedPlaylist=p.id;$('playlistName').value='';savePlaylists();renderPlaylists()}
 function selectPlaylist(id){selectedPlaylist=id;renderPlaylists()}
 function addToPlaylist(){let p=getPlaylist();if(!p)return alert('Create or select a playlist first');if(!p.songs.includes(si))p.songs.push(si);savePlaylists();renderPlaylists()}
@@ -145,13 +200,18 @@ function updateVideoElement(video){
 const $=id=>document.getElementById(id);
 function song(){return library[si]}
 function section(){return song()?.verses[vi]}
-function persist(){try{localStorage.setItem('ja1_library',JSON.stringify(library));localStorage.setItem('ja1_settings',JSON.stringify(settings))}catch(e){console.warn('Storage full; export your library',e)}}
-function save(){persist();savePlaylists();alert('Saved in this browser. Export Library for a portable backup.')}
+function persist(){
+ saveNativeState();
+ try{localStorage.setItem('ja1_library',JSON.stringify(library));localStorage.setItem('ja1_settings',JSON.stringify(settings))}
+ catch(e){console.warn('Browser storage full; Android native save is still used',e)}
+}
+function save(){persist();savePlaylists();if(saveNativeState())alert('Saved in Android app storage. Export Library for an extra backup.')}
 function render(){mode='song';if(!library.length)library=[{title:'New Song',verses:[{name:'v1',text:''}]}];si=Math.min(si,library.length-1);vi=Math.min(vi,song().verses.length-1);
 renderSongs();renderPlaylists();renderSectionBackground();
 $('verses').replaceChildren();song().verses.forEach((v,i)=>{let b=document.createElement('button');b.className='verse '+(i===vi?'selected':'');b.textContent=(v.name||'Section')+' · '+v.text.replace(/\n/g,' ').slice(0,60);b.onclick=()=>{vi=i;render()};$('verses').append(b)});
 $('songtitle').value=song().title;$('vname').value=section()?.name||'';$('lyrics').value=section()?.text||'';$('current').textContent=song().title+' · '+(section()?.name||'');draw()}
 function draw(){
+ if(slidesActive){renderSlidePresenter();return;}
  $('clearBtn').textContent=clearLyrics?'Show Lyrics':'Clear Lyrics';$('blackBtn').textContent=blackout?'Restore Output':'Blackout';$('nextPreview').textContent=nextInfo();
  for(let id of ['preview','fullstage']){
  let el=$(id),t=el.querySelector('.stageText');applyTextFade(el,displayText());
@@ -169,8 +229,8 @@ function renameSong(){song().title=$('songtitle').value;persist();let buttons=$(
 function addVerse(){song().verses.push({name:'v'+(song().verses.length+1),text:''});vi=song().verses.length-1;persist();render()}
 function deleteVerse(){if(song().verses.length===1)return alert('Keep at least one section');song().verses.splice(vi,1);vi=Math.max(0,vi-1);persist();render()}
 function newSong(){library.push({title:'Untitled Song',verses:[{name:'v1',text:''}]});si=library.length-1;vi=0;persist();render()}
-function prev(){mode='song';clearLyrics=false;blackout=false;if(vi>0)vi--;else{let p=getPlaylist(),at=p?.songs.indexOf(si)??-1;if(at>0){si=p.songs[at-1];vi=song().verses.length-1}else if(at<0&&si>0){si--;vi=song().verses.length-1}}render()}
-function next(){mode='song';clearLyrics=false;blackout=false;if(vi<song().verses.length-1)vi++;else{let p=getPlaylist(),at=p?.songs.indexOf(si)??-1;if(at>=0&&at<p.songs.length-1){si=p.songs[at+1];vi=0}else if(at<0&&si<library.length-1){si++;vi=0}}render()}
+function prev(){if(slidesActive){slideStep(-1);return}mode='song';clearLyrics=false;blackout=false;if(vi>0)vi--;else{let p=getPlaylist(),at=p?.songs.indexOf(si)??-1;if(at>0){si=p.songs[at-1];vi=song().verses.length-1}else if(at<0&&si>0){si--;vi=song().verses.length-1}}render()}
+function next(){if(slidesActive){slideStep(1);return}mode='song';clearLyrics=false;blackout=false;if(vi<song().verses.length-1)vi++;else{let p=getPlaylist(),at=p?.songs.indexOf(si)??-1;if(at>=0&&at<p.songs.length-1){si=p.songs[at+1];vi=0}else if(at<0&&si<library.length-1){si++;vi=0}}render()}
 function styleChanged(){for(let id of ['font','size','weight','align','color','bg'])settings[id]=$(id).value;$('sizeVal').textContent=settings.size+'px';persist();draw()}
 function backgroundImage(f){if(!f)return;let reader=new FileReader();reader.onload=()=>{settings.image=reader.result;persist();draw()};reader.readAsDataURL(f)}
 function clearBackground(){delete settings.image;persist();draw()}
@@ -178,7 +238,7 @@ function outputMarkup(){return `<!doctype html><html><head><meta name="viewport"
 .toolstrip{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}.toolstrip button{flex:1;min-width:105px}.status{background:#0d1421;padding:9px;border-radius:8px;color:#aebfdb}.panel{margin:12px 0;padding:12px;border:1px solid #344157;border-radius:10px}.panel h2{margin-top:0}.next-preview{white-space:pre-line;background:#0c1422;padding:14px;border-radius:9px;min-height:85px;color:#dce8fa}.stage .stageText{transition:opacity .3s ease}.stage .stageText.fading{opacity:0}.stageShade{position:absolute;inset:0;pointer-events:none;z-index:1}.stageText{z-index:2}.stage.blank .stageText{visibility:hidden}.stage.black{background:#000!important;background-image:none!important}.stage.black video,.stage.black .stageShade,.stage.black .stageText{visibility:hidden}.compact{font-size:12px}.playlist-entry{display:flex;gap:4px;align-items:center}.playlist-entry button:first-child{flex:1}.playlist-entry button:not(:first-child){flex:0 0 35px;padding:8px 4px}
 </style></head><body><div id="screen"><video id="bgVideo" autoplay muted loop playsinline></video><div id="words"></div></div><button id="full" onclick="document.documentElement.requestFullscreen?.()">⛶</button></body></html>`}
 function syncOutput(){if(!outputWindow||outputWindow.closed)return;try{const d=outputWindow.document;const screen=d.getElementById('screen'),words=d.getElementById('words');if(!screen||!words)return;words.textContent=displayText();words.style.fontFamily=settings.font||'Arial';words.style.fontWeight=settings.weight||'700';words.style.textAlign=settings.align||'center';words.style.color=settings.color||'#ffffff';words.style.fontSize='clamp(24px, '+((settings.size||52)/12)+'vw, '+((settings.size||52)*2)+'px)';screen.style.backgroundColor=blackout?'#000000':settings.bg||'#000000';screen.style.backgroundImage=!blackout&&effectiveBg().image?'url('+effectiveBg().image+')':'none';updateVideoElement(d.getElementById('bgVideo'))}catch(e){console.warn('Output sync unavailable',e)}}
-function present(){if(window.JA1Android){window.JA1Android.openOutput();draw();return;}if(outputWindow&&!outputWindow.closed){outputWindow.focus();syncOutput();return}outputWindow=window.open('','JA1_Lyrics_Output','popup=yes,width=1280,height=720');if(!outputWindow){alert('Allow pop-ups for this HTML file, then tap Open Lyrics Output again.');return}outputWindow.document.open();outputWindow.document.write(outputMarkup());outputWindow.document.close();syncOutput()}
+function present(){if(slidesActive){window.JA1Android?.openOutput();renderSlidePresenter();return}if(window.JA1Android){window.JA1Android.openOutput();draw();return;}if(outputWindow&&!outputWindow.closed){outputWindow.focus();syncOutput();return}outputWindow=window.open('','JA1_Lyrics_Output','popup=yes,width=1280,height=720');if(!outputWindow){alert('Allow pop-ups for this HTML file, then tap Open Lyrics Output again.');return}outputWindow.document.open();outputWindow.document.write(outputMarkup());outputWindow.document.close();syncOutput()}
 function closeOutput(){if(window.JA1Android){window.JA1Android.closeOutput();return;}if(outputWindow&&!outputWindow.closed)outputWindow.close();outputWindow=null}
 function fullscreenOutput(){if(window.JA1Android){window.JA1Android.openOutput();draw();return;}if(!outputWindow||outputWindow.closed){alert('Open Lyrics Output first');return}try{outputWindow.focus();outputWindow.document.documentElement.requestFullscreen?.().catch(()=>{})}catch(e){alert('Tap the fullscreen button in the output window')}}
 function stop(){closeOutput()}
@@ -187,8 +247,12 @@ function parseXml(txt){let doc=new DOMParser().parseFromString(txt,'application/
 function parseTxt(txt,name){let verses=[],current=null;for(let line of txt.replace(/\r/g,'').split('\n')){let match=line.match(/^\s*\[(.+?)\]\s*$/);if(match){current={name:match[1],text:''};verses.push(current)}else{if(!current){current={name:'v1',text:''};verses.push(current)}current.text+=(current.text?'\n':'')+line}}return{title:name.replace(/\.[^.]+$/,''),verses}}
 async function uploadFiles(files){for(let f of files){try{let txt=await f.text();library.push(f.name.toLowerCase().endsWith('.xml')?parseXml(txt):parseTxt(txt,f.name))}catch(e){alert('Cannot import '+f.name+': '+e.message)}}si=library.length-1;vi=0;persist();render();$('files').value=''}
 function download(name,content,type){let a=document.createElement('a'),url=URL.createObjectURL(new Blob([content],{type}));a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),2000)}
-function exportLibrary(){download('anointed-presenter-library.json',JSON.stringify({library,settings,playlists,bgPresets},null,2),'application/json')}
+function exportLibrary(){
+ const json=JSON.stringify({library,settings,playlists,bgPresets},null,2);
+ if(window.JA1Android?.exportPresenterLibrary){window.JA1Android.exportPresenterLibrary(json);return}
+ download('anointed-presenter-library.json',json,'application/json');
+}
 async function importLibrary(f){if(!f)return;try{let data=JSON.parse(await f.text());if(!Array.isArray(data.library))throw Error('Not a library');library=data.library;settings=data.settings||{};playlists=Array.isArray(data.playlists)?data.playlists:[];selectedPlaylist=playlists[0]?.id||null;bgPresets=Array.isArray(data.bgPresets)?data.bgPresets:[];try{localStorage.setItem('ja1_bg_presets',JSON.stringify(bgPresets))}catch(e){}renderBackgroundPresets();savePlaylists();si=0;vi=0;loadSettings();persist();render()}catch(e){alert(e.message)}}
 function loadSettings(){if(settings.fadeMs!==undefined)$('fadeSpeed').value=settings.fadeMs;if(settings.videoFit)$('videoFit').value=settings.videoFit;if(settings.videoDim!==undefined)$('videoDim').value=settings.videoDim;$('dimVal').textContent=(settings.videoDim??35)+'%';for(let id of ['font','size','weight','align','color','bg'])if(settings[id]!==undefined)$(id).value=settings[id];$('sizeVal').textContent=(settings.size||52)+'px'}
-loadSettings();renderBackgroundPresets();fillBibleBooks();render();
+loadSettings();renderBackgroundPresets();fillBibleBooks();render();if(window.JA1Android?.getSlideCount){slideCount=Number(window.JA1Android.getSlideCount())||0;renderSlidePresenter()}
 </script></body></html>

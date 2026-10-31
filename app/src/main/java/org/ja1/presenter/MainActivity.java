@@ -20,7 +20,14 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
+import android.util.AtomicFile;
+import java.io.FileInputStream;
 import android.graphics.Color;
+import android.graphics.Bitmap;
+import android.graphics.pdf.PdfRenderer;
+import android.os.ParcelFileDescriptor;
+import android.widget.ImageView;
+import android.graphics.BitmapFactory;
 import android.view.Gravity;
 import org.json.JSONObject;
 import java.net.ServerSocket;
@@ -44,6 +51,9 @@ public class MainActivity extends Activity {
     private ValueCallback<Uri[]> pending;
     private static final int FILE_REQUEST=21;
     private static final int SECTION_VIDEO_REQUEST=22;
+    private static final int EXPORT_LIBRARY_REQUEST=23;
+    private static final int SLIDE_DECK_REQUEST=24;
+    private String pendingExportJson=null;
     private String sectionVideoKey="";
     private final Handler ui=new Handler(Looper.getMainLooper());
     private LyricsPresentation output;
@@ -61,7 +71,15 @@ public class MainActivity extends Activity {
     @Override public void onCreate(Bundle state){super.onCreate(state);displayManager=(DisplayManager)getSystemService(Context.DISPLAY_SERVICE);displayManager.registerDisplayListener(listener,ui);web=makeWebView();File savedVideo=new File(getFilesDir(),"projector_background.mp4");if(savedVideo.exists())videoPath=savedVideo.getAbsolutePath();web.addJavascriptInterface(new Bridge(),"JA1Android");setContentView(web);web.loadUrl("file:///android_asset/index.html");}
     private WebView makeWebView(){
         WebView w=new WebView(this);WebSettings s=w.getSettings();s.setJavaScriptEnabled(true);s.setDomStorageEnabled(true);s.setAllowFileAccess(true);s.setJavaScriptCanOpenWindowsAutomatically(true);s.setSupportMultipleWindows(false);
-        w.setWebViewClient(new WebViewClient());
+        w.setWebViewClient(new WebViewClient(){
+            @Override public WebResourceResponse shouldInterceptRequest(WebView view,WebResourceRequest req){
+                Uri uri=req.getUrl();if("appassets.androidplatform.net".equals(uri.getHost())&&uri.getPath().startsWith("/slide/")){
+                    int idx=currentSlide+(uri.getPath().endsWith("/next")?1:0);
+                    return new WebResourceResponse("image/jpeg",null,new java.io.ByteArrayInputStream(renderSlideJpeg(idx)));
+                }
+                return super.shouldInterceptRequest(view,req);
+            }
+        });
         w.setWebChromeClient(new WebChromeClient(){
             @Override public boolean onShowFileChooser(WebView v,ValueCallback<Uri[]> callback,FileChooserParams params){
                 if(pending!=null)pending.onReceiveValue(null);pending=callback;
@@ -96,7 +114,106 @@ public class MainActivity extends Activity {
             finally{if(conn!=null)conn.disconnect();}
         },"BibleApi").start();
     }
+    private final Object stateLock=new Object();
+    private File stateFile(){return new File(getFilesDir(),"anointed_library_state.json");}
+    private String readSavedState(){
+        synchronized(stateLock){
+            try{
+                AtomicFile f=new AtomicFile(stateFile());
+                try(FileInputStream in=f.openRead()){
+                    ByteArrayOutputStream b=new ByteArrayOutputStream();byte[] buffer=new byte[16384];int n;
+                    while((n=in.read(buffer))!=-1){b.write(buffer,0,n);if(b.size()>25000000)throw new Exception("Library too large");}
+                    return b.toString("UTF-8");
+                }
+            }catch(Exception e){return "";}
+        }
+    }
+    private boolean writeSavedState(String value){
+        synchronized(stateLock){
+            AtomicFile f=new AtomicFile(stateFile());FileOutputStream out=null;
+            try{
+                JSONObject o=new JSONObject(value);
+                if(o.getJSONArray("library").length()<1)return false;
+                out=f.startWrite();out.write(value.getBytes("UTF-8"));f.finishWrite(out);return true;
+            }catch(Exception e){
+                if(out!=null)f.failWrite(out);
+                android.util.Log.e("AnointedSave","Could not save library",e);return false;
+            }
+        }
+    }
+    private void startLibraryExport(String json){
+        ui.post(()->{
+            try{
+                JSONObject o=new JSONObject(json);
+                if(!o.has("library")||o.getJSONArray("library").length()==0)throw new Exception("No songs in library");
+                pendingExportJson=json;
+                Intent i=new Intent(Intent.ACTION_CREATE_DOCUMENT);
+                i.addCategory(Intent.CATEGORY_OPENABLE);
+                i.setType("application/json");
+                i.putExtra(Intent.EXTRA_TITLE,"anointed-presenter-library.json");
+                startActivityForResult(i,EXPORT_LIBRARY_REQUEST);
+            }catch(Exception e){pendingExportJson=null;showMessage("Export failed: "+e.getMessage());}
+        });
+    }
+    private void finishLibraryExport(Uri uri){
+        final String json=pendingExportJson;pendingExportJson=null;
+        if(json==null||uri==null)return;
+        new Thread(()->{
+            try(OutputStream out=getContentResolver().openOutputStream(uri,"w")){
+                if(out==null)throw new Exception("Unable to open selected file");
+                out.write(json.getBytes("UTF-8"));out.flush();
+                ui.post(()->showMessage("Library exported successfully. Find it in the folder you selected."));
+            }catch(Exception e){ui.post(()->showMessage("Export failed: "+e.getMessage()));}
+        },"LibraryExport").start();
+    }
+    private File slideFile(){return new File(getFilesDir(),"presenter_slides.pdf");}
+    private int pdfPages(){
+        File f=slideFile();if(!f.exists())return 0;
+        try(ParcelFileDescriptor fd=ParcelFileDescriptor.open(f,ParcelFileDescriptor.MODE_READ_ONLY);PdfRenderer renderer=new PdfRenderer(fd)){return renderer.getPageCount();}
+        catch(Exception e){return 0;}
+    }
+    private Bitmap slideBitmap(int index){
+        try(ParcelFileDescriptor fd=ParcelFileDescriptor.open(slideFile(),ParcelFileDescriptor.MODE_READ_ONLY);PdfRenderer renderer=new PdfRenderer(fd)){
+            if(index<0||index>=renderer.getPageCount())return null;
+            try(PdfRenderer.Page page=renderer.openPage(index)){
+                int w=1280,h=Math.max(1,Math.round(w*(float)page.getHeight()/page.getWidth()));
+                if(h>2400){h=2400;w=Math.max(1,Math.round(h*(float)page.getWidth()/page.getHeight()));}
+                Bitmap bmp=Bitmap.createBitmap(w,h,Bitmap.Config.ARGB_8888);bmp.eraseColor(Color.WHITE);
+                page.render(bmp,null,null,PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY);return bmp;
+            }
+        }catch(Exception e){android.util.Log.e("SlidePDF","Rendering failed",e);return null;}
+    }
+    private void importPdfSlides(){ui.post(()->{
+        Intent i=new Intent(Intent.ACTION_OPEN_DOCUMENT);i.setType("application/pdf");i.addCategory(Intent.CATEGORY_OPENABLE);
+        startActivityForResult(i,SLIDE_DECK_REQUEST);
+    });}
+    private void copyPdfSlides(Uri uri){new Thread(()->{
+        File tmp=new File(getFilesDir(),"presenter_slides.tmp"),target=slideFile();
+        try(InputStream in=getContentResolver().openInputStream(uri);OutputStream out=new FileOutputStream(tmp)){
+            if(in==null)throw new Exception("Cannot open PDF");byte[] b=new byte[65536];int n;long total=0;
+            while((n=in.read(b))!=-1){total+=n;if(total>150000000)throw new Exception("PDF exceeds 150 MB");out.write(b,0,n);}
+            out.flush();
+            try(ParcelFileDescriptor fd=ParcelFileDescriptor.open(tmp,ParcelFileDescriptor.MODE_READ_ONLY);PdfRenderer r=new PdfRenderer(fd)){if(r.getPageCount()<1)throw new Exception("No slides found");}
+            if(target.exists()&&!target.delete())throw new Exception("Cannot replace old slides");
+            if(!tmp.renameTo(target))throw new Exception("Cannot save slides");
+            int count=pdfPages();ui.post(()->{web.evaluateJavascript("slideDeckReady("+count+")",null);showMessage("Imported "+count+" slides. Open Projector Output to present.");});
+        }catch(Exception e){tmp.delete();ui.post(()->showMessage("Slide import failed: "+e.getMessage()));}
+    },"SlideImport").start();}
+    private byte[] renderSlideJpeg(int index){Bitmap b=slideBitmap(index);if(b==null)return new byte[0];try(ByteArrayOutputStream out=new ByteArrayOutputStream()){
+        b.compress(Bitmap.CompressFormat.JPEG,88,out);return out.toByteArray();
+    }catch(Exception e){return new byte[0];}finally{b.recycle();}}
+    private volatile int currentSlide=0;
+    private volatile boolean showingSlides=false;
     private class Bridge {
+        @JavascriptInterface public void importSlideDeck(){importPdfSlides();}
+        @JavascriptInterface public int getSlideCount(){return pdfPages();}
+        @JavascriptInterface public void removeSlideDeck(){ui.post(()->{slideFile().delete();showingSlides=false;currentSlide=0;if(output!=null)output.showSlide(null,false);});}
+        @JavascriptInterface public void showSongs(){ui.post(()->{showingSlides=false;if(output!=null)output.showSlide(null,false);});}
+        @JavascriptInterface public void showSlide(int index,boolean black){ui.post(()->{currentSlide=index;showingSlides=true;if(output!=null)output.showSlide(black?null:slideBitmap(index),black);});}
+        @JavascriptInterface public void exportPresenterLibrary(String json){startLibraryExport(json);}
+        @JavascriptInterface public String loadPresenterState(){return readSavedState();}
+        @JavascriptInterface public boolean savePresenterState(String json){return writeSavedState(json);}
+
         @JavascriptInterface public void saveBibleApiKey(String key){
             getSharedPreferences("anointed_private",MODE_PRIVATE).edit().putString("bible_key",key.trim()).apply();
             bibleResult("save",new JSONObject(java.util.Collections.singletonMap("ok",true)));
@@ -165,17 +282,23 @@ public class MainActivity extends Activity {
         }catch(Exception e){android.util.Log.w("JA1Remote","Request failed",e);}
     }
     private void openPresentation(){
-        if(output!=null&&output.isShowing()){output.render(lastLyrics);try{JSONObject o=new JSONObject(lastLyrics);String key=o.optString("sectionVideoKey","default");File f=key.equals("default")?new File(getFilesDir(),"projector_background.mp4"):new File(getFilesDir(),"section_"+key.replace(':','_')+".mp4");output.setVideo(o.optBoolean("videoActive",false)&&f.exists()?f.getAbsolutePath():"");}catch(Exception ignored){}return;}
+        if(output!=null&&output.isShowing()){if(showingSlides)output.showSlide(slideBitmap(currentSlide),false);else output.showSlide(null,false);output.render(lastLyrics);try{JSONObject o=new JSONObject(lastLyrics);String key=o.optString("sectionVideoKey","default");File f=key.equals("default")?new File(getFilesDir(),"projector_background.mp4"):new File(getFilesDir(),"section_"+key.replace(':','_')+".mp4");output.setVideo(o.optBoolean("videoActive",false)&&f.exists()?f.getAbsolutePath():"");}catch(Exception ignored){}return;}
         Display[] displays=displayManager.getDisplays(DisplayManager.DISPLAY_CATEGORY_PRESENTATION);
         Display chosen=null;
         for(Display d:displays){if(d.getDisplayId()!=web.getDisplay().getDisplayId()){chosen=d;break;}}
         if(chosen==null){showMessage("No independent projector display detected. Huawei HDMI may be in mirror-only mode. Presenter view will stay on tablet.");return;}
-        try{output=new LyricsPresentation(this,chosen);output.show();output.render(lastLyrics);output.setVideo(videoPath);showMessage("Lyrics output opened on projector.");}
+        try{output=new LyricsPresentation(this,chosen);output.show();output.render(lastLyrics);output.setVideo(videoPath);if(showingSlides)output.showSlide(slideBitmap(currentSlide),false);showMessage("Lyrics output opened on projector.");}
         catch(Exception e){output=null;showMessage("Cannot open projector: "+e.getMessage());}
     }
     private void closePresentation(){if(output!=null){output.dismiss();output=null;}}
     private void showMessage(String s){android.widget.Toast.makeText(this,s,android.widget.Toast.LENGTH_LONG).show();}
-    @Override protected void onActivityResult(int request,int result,Intent data){super.onActivityResult(request,result,data);if(request==SECTION_VIDEO_REQUEST){if(result==RESULT_OK&&data!=null&&data.getData()!=null)copySectionVideo(data.getData(),sectionVideoKey);return;}
+    @Override protected void onActivityResult(int request,int result,Intent data){super.onActivityResult(request,result,data);if(request==EXPORT_LIBRARY_REQUEST){
+            if(result==RESULT_OK&&data!=null&&data.getData()!=null)finishLibraryExport(data.getData());
+            else pendingExportJson=null;
+            return;
+        }
+        if(request==SLIDE_DECK_REQUEST){if(result==RESULT_OK&&data!=null&&data.getData()!=null)copyPdfSlides(data.getData());return;}
+        if(request==SECTION_VIDEO_REQUEST){if(result==RESULT_OK&&data!=null&&data.getData()!=null)copySectionVideo(data.getData(),sectionVideoKey);return;}
         if(request==FILE_REQUEST&&pending!=null){
             Uri[] chosen=WebChromeClient.FileChooserParams.parseResult(result,data);
             pending.onReceiveValue(chosen);pending=null;
@@ -213,11 +336,13 @@ public class MainActivity extends Activity {
     @Override protected void onDestroy(){stopRemoteServer();closePresentation();displayManager.unregisterDisplayListener(listener);web.destroy();super.onDestroy();}
     @Override public void onBackPressed(){if(web.canGoBack())web.goBack();else super.onBackPressed();}
     private static class LyricsPresentation extends Presentation {
-        private FrameLayout root;private TextView words;private VideoView video;private android.view.View shade;private String currentVideo="";private boolean isBlack=false;
+        private FrameLayout root;private ImageView slideView;private TextView words;private VideoView video;private android.view.View shade;private String currentVideo="";private boolean isBlack=false;
         LyricsPresentation(Context context,Display display){super(context,display);}
         @Override protected void onCreate(Bundle b){super.onCreate(b);root=new FrameLayout(getContext());root.setBackgroundColor(Color.BLACK);
             video=new VideoView(getContext());
             root.addView(video,new FrameLayout.LayoutParams(-1,-1));
+            slideView=new ImageView(getContext());slideView.setBackgroundColor(Color.BLACK);slideView.setScaleType(ImageView.ScaleType.FIT_CENTER);
+            root.addView(slideView,new FrameLayout.LayoutParams(-1,-1));slideView.setVisibility(android.view.View.GONE);
             video.setVisibility(android.view.View.GONE);
             video.setOnPreparedListener(mp->{mp.setLooping(true);mp.setVolume(0f,0f);mp.start();});
             shade=new android.view.View(getContext());
@@ -231,6 +356,13 @@ public class MainActivity extends Activity {
             video.setVisibility(isBlack?android.view.View.GONE:android.view.View.VISIBLE);shade.setVisibility(isBlack?android.view.View.GONE:android.view.View.VISIBLE);
             video.setVideoPath(path);
             video.start();
+        }
+        void showSlide(Bitmap bitmap,boolean black){
+            if(slideView==null)return;
+            if(bitmap==null&&!black){slideView.setImageDrawable(null);slideView.setVisibility(android.view.View.GONE);return;}
+            slideView.setVisibility(android.view.View.VISIBLE);slideView.bringToFront();
+            if(black){slideView.setImageDrawable(null);slideView.setBackgroundColor(Color.BLACK);}
+            else{slideView.setBackgroundColor(Color.BLACK);slideView.setImageBitmap(bitmap);}
         }
         void render(String json){if(root==null)return;try{JSONObject d=new JSONObject(json);
             isBlack=d.optBoolean("blackout",false);

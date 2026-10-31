@@ -13,3 +13,7 @@ Merged uploaded Media Library HTML: IndexedDB stored motion videos, categories P
 2026-10-27: Removed non-working IndexedDB Media Library UI. Section Background supports remove selected, apply to all slides of current song, remove from all slides, apply to choruses. Native videoKey shared by slide assignments for same video. Build not tested.
 
 Projector font fix: native Android Presentation now maps browser font selections to supported Android typeface families and applies Regular/Bold/Extra Bold weights. Exact Arial/Georgia/Impact glyphs may differ from browser because native fonts are substitutes. APK build and device test pending.
+
+AUTOSAVE FIX: Android native private storage now saves library, settings, playlists and image presets atomically on each edit, independent of WebView localStorage quotas. Restores native data on startup; first upgraded launch migrates previous localStorage content. If native saving fails the user sees a warning. Export Library before updating. Does not recover content already lost on older versions. Do not clear app data or uninstall before backup. Build/device testing required.
+
+EXPORT FIX: Export Library now uses Android ACTION_CREATE_DOCUMENT Save As picker. Choose Download/Documents folder and save anointed-presenter-library.json. A toast confirms success or error. Includes songs/lyrics/playlists/settings/image presets, not video binaries. Import uses existing Android file chooser. The browser fallback remains for PC HTML.
